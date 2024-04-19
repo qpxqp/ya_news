@@ -1,7 +1,7 @@
 # news/tests/test_content.py
 from datetime import datetime, timedelta
 
-from django.conf import settings  # type: ignore
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase  # type: ignore
 from django.urls import reverse  # type: ignore
