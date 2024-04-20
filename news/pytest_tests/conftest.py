@@ -1,6 +1,6 @@
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
 from django.conf import settings
 from django.test.client import Client
 from django.urls import reverse
@@ -93,13 +93,12 @@ def comment(author, news):
 
 @pytest.fixture
 def news_for_home_page():
-    all_news = []
-    for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1):
-        all_news.append(News(
-            title=NEWS_TITLE + f'{index}',
-            text=NEWS_TEXT,
-            date=datetime.today() - timedelta(days=index)
-        ))
+    all_news = [
+        News(title=NEWS_TITLE + f'{index}',
+             text=NEWS_TEXT,
+             date=datetime.today() - timedelta(days=index))
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
+    ]
     News.objects.bulk_create(all_news)
 
 
@@ -128,6 +127,16 @@ def comment_data(news, author):
 @pytest.fixture
 def url_users_login(login_path):
     return reverse(login_path)
+
+
+@pytest.fixture
+def url_users_logout(logout_path):
+    return reverse(logout_path)
+
+
+@pytest.fixture
+def url_users_signup(signup_path):
+    return reverse(signup_path)
 
 
 @pytest.fixture

@@ -1,70 +1,55 @@
-import pytest
 from http import HTTPStatus
 
-from django.urls import reverse
+import pytest
 from pytest_django.asserts import assertRedirects
 from pytest_lazyfixture import lazy_fixture as lf
 
-from news.models import Comment
 
-URLS = (
-    (lf('home_path'), None),
-    (lf('login_path'), None),
-    (lf('logout_path'), None),
-    (lf('signup_path'), None),
-    (lf('detail_path'), lf('news')),
-    (lf('edit_path'), lf('comment')),
-    (lf('delete_path'), lf('comment')),
-)
-ONLY_COMMENTS_URLS = URLS[5:]
+URL_USERS_LOGIN = lf('url_users_login')
+URL_USERS_LOGOUT = lf('url_users_logout')
+URL_USERS_SIGNUP = lf('url_users_signup')
+URL_NEWS_HOME = lf('url_news_home')
+URL_NEWS_DETAIL = lf('url_news_detail')
+URL_COMMENT_EDIT = lf('url_comment_edit')
+URL_COMMENT_DELETE = lf('url_comment_delete')
+
+CLIENT = lf('client')
+AUTHOR_CLIENT = lf('author_client')
+NOT_AUTHOR_CLIENT = lf('not_author_client')
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    'name, comment_or_news',
-    URLS
+    'reverse_url, parametrized_client, status',
+    (
+        (URL_USERS_LOGIN, CLIENT, HTTPStatus.OK),
+        (URL_USERS_LOGOUT, CLIENT, HTTPStatus.OK),
+        (URL_USERS_SIGNUP, CLIENT, HTTPStatus.OK),
+        (URL_NEWS_HOME, CLIENT, HTTPStatus.OK),
+        (URL_NEWS_DETAIL, CLIENT, HTTPStatus.OK),
+        (URL_COMMENT_EDIT, AUTHOR_CLIENT, HTTPStatus.OK),
+        (URL_COMMENT_DELETE, AUTHOR_CLIENT, HTTPStatus.OK),
+        (URL_COMMENT_EDIT, NOT_AUTHOR_CLIENT, HTTPStatus.NOT_FOUND),
+        (URL_COMMENT_DELETE, NOT_AUTHOR_CLIENT, HTTPStatus.NOT_FOUND),
+    )
 )
-def test_pages_availability_for_anonymous_user(
-    client, login_path, name, comment_or_news
+def test_pages_availability_for_all_users(
+    reverse_url, parametrized_client, status
 ):
-    if isinstance(comment_or_news, Comment):
-        login_url = reverse(login_path)
-        url = reverse(name, args=(comment_or_news.id,))
-        expected_url = f'{login_url}?next={url}'
-        response = client.get(url)
-        assertRedirects(response, expected_url)
-    else:
-        if comment_or_news:
-            url = reverse(name, args=(comment_or_news.id,))
-        else:
-            url = reverse(name)
-
-        response = client.get(url)
-        assert response.status_code == HTTPStatus.OK
+    response = parametrized_client.get(reverse_url)
+    assert response.status_code == status
 
 
 @pytest.mark.parametrize(
-    'name, comment_or_news',
-    URLS
+    'url, redirect_url',
+    (
+        (URL_COMMENT_EDIT, URL_USERS_LOGIN),
+        (URL_COMMENT_DELETE, URL_USERS_LOGIN),
+    )
 )
-def test_pages_availability_for_author(
-    author_client, name, comment_or_news
+def test_redirect_for_anonymous_user(
+    url, redirect_url, client,
 ):
-    if comment_or_news:
-        url = reverse(name, args=(comment_or_news.id,))
-    else:
-        url = reverse(name)
-    response = author_client.get(url)
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.parametrize(
-    'name, comment_object',
-    ONLY_COMMENTS_URLS
-)
-def test_pages_availability_for_not_author(
-    not_author_client, name, comment_object
-):
-    url = reverse(name, args=(comment_object.id,))
-    response = not_author_client.get(url)
-    assert response.status_code == HTTPStatus.NOT_FOUND
+    expected_url = f'{redirect_url}?next={url}'
+    response = client.get(url)
+    assertRedirects(response, expected_url)

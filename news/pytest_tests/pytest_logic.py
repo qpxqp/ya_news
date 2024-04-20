@@ -1,8 +1,8 @@
-import pytest
 from http import HTTPStatus
 from random import choice
 
-from pytest_django.asserts import assertRedirects, assertFormError
+import pytest
+from pytest_django.asserts import assertFormError, assertRedirects
 
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
@@ -50,7 +50,7 @@ def test_author_can_edit_comment(
     response = author_client.post(url_comment_edit, data=comment_data)
     assertRedirects(response, f'{url_news_detail}#comments')
     assert Comment.objects.count() == count_comments
-    new_comment = Comment.objects.last()
+    new_comment = Comment.objects.get(pk=comment.id)
     assert new_comment.text == comment_data['text']
     assert new_comment.author == comment.author
     assert new_comment.news == comment.news
@@ -63,8 +63,7 @@ def test_not_author_can_not_edit_comment(
     response = not_author_client.post(url_comment_edit, data=comment_data)
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert Comment.objects.count() == count_comments
-    new_comment = Comment.objects.last()
-    assert new_comment.text == comment_data['text']
+    new_comment = Comment.objects.get(pk=comment.id)
     assert new_comment.author == comment.author
     assert new_comment.news == comment.news
 

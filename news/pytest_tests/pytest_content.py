@@ -1,31 +1,28 @@
 import pytest
-
 from django.conf import settings
 from pytest_lazyfixture import lazy_fixture as lf
 
 from news.forms import CommentForm
 
+pytestmark = pytest.mark.django_db
 
-@pytest.mark.django_db
+
 @pytest.mark.parametrize(
-    'parametrized_client',
+    'parametrized_client, form_availability',
     (
-        lf('author_client'),
-        lf('client'),
+        (lf('author_client'), True),
+        (lf('client'), False),
     )
 )
 def test_pages_contains_form(
-    parametrized_client, client, url_news_detail
+    parametrized_client, form_availability, url_news_detail
 ):
     response = parametrized_client.get(url_news_detail)
-    if parametrized_client is client:
-        assert 'form' not in response.context
-    else:
-        assert 'form' in response.context
+    assert ('form' in response.context) is form_availability
+    if form_availability:
         assert isinstance(response.context['form'], CommentForm)
 
 
-@pytest.mark.django_db
 @pytest.mark.usefixtures('news_for_home_page')
 def test_news_count_on_homepage(client, url_news_home):
     response = client.get(url_news_home)
@@ -33,7 +30,6 @@ def test_news_count_on_homepage(client, url_news_home):
     assert news_count == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
-@pytest.mark.django_db
 @pytest.mark.usefixtures('news_for_home_page')
 def test_news_order(client, url_news_home):
     response = client.get(url_news_home)
