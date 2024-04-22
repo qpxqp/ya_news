@@ -66,6 +66,7 @@ def test_not_author_can_not_edit_comment(
     new_comment = Comment.objects.get(pk=comment.id)
     assert new_comment.author == comment.author
     assert new_comment.news == comment.news
+    assert new_comment.text == comment.text
 
 
 def test_author_can_delete_comment(

@@ -41,15 +41,12 @@ def test_pages_availability_for_all_users(
 
 
 @pytest.mark.parametrize(
-    'url, redirect_url',
-    (
-        (URL_COMMENT_EDIT, URL_USERS_LOGIN),
-        (URL_COMMENT_DELETE, URL_USERS_LOGIN),
-    )
+    'url',
+    (URL_COMMENT_EDIT, URL_COMMENT_DELETE)
 )
 def test_redirect_for_anonymous_user(
-    url, redirect_url, client,
+    url, client, url_users_login
 ):
-    expected_url = f'{redirect_url}?next={url}'
+    expected_url = f'{url_users_login}?next={url}'
     response = client.get(url)
     assertRedirects(response, expected_url)
