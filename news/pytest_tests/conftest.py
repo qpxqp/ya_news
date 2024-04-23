@@ -88,10 +88,8 @@ def comments_for_news(author, news):
 
 
 @pytest.fixture
-def comment_data(news, author):
+def comment_data():
     return {
-        'news': news,
-        'author': author,
         'text': COMMENTS_TEXT
     }
 
